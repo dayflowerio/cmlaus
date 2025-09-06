@@ -1,0 +1,549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cmlaus.org/schemas/1.0.0/spec.json",
+  "title": "CML:AUS Definition Set",
+  "description": "A collection of definitions that describe a data ecosystem according to the Common Modeling Language: A Universal Schema (CML:AUS) specification v1.0.0.",
+  "type": "object",
+  "properties": {
+    "cmlausVersion": {
+      "description": "The version of the CML:AUS specification this document adheres to.",
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "id": {
+      "description": "A unique Uniform Resource Name (URN) that identifies this Definition Set.",
+      "type": "string",
+      "format": "uri",
+      "examples": [
+        "urn:e-corp:user-services:main-definitions"
+      ]
+    },
+    "docs": {
+      "description": "Human-readable documentation for the Definition Set. Markdown is recommended.",
+      "type": "string"
+    },
+    "imports": {
+      "description": "A list of other CML:AUS definitions to import.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Import"
+      }
+    },
+    "definitions": {
+      "description": "The map of core component definitions.",
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_]*$": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/TypeComponent"
+            },
+            {
+              "$ref": "#/$defs/StorageComponent"
+            },
+            {
+              "$ref": "#/$defs/InterfaceComponent"
+            },
+            {
+              "$ref": "#/$defs/TransformationComponent"
+            },
+            {
+              "$ref": "#/$defs/SourceComponent"
+            },
+            {
+              "$ref": "#/$defs/TargetComponent"
+            },
+            {
+              "$ref": "#/$defs/EnvironmentStageComponent"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "cmlausVersion",
+    "id",
+    "definitions"
+  ],
+  "$defs": {
+    "Version": {
+      "description": "Specifies a version using one or more constraints.",
+      "type": "object",
+      "properties": {
+        "absolute": {
+          "type": "string"
+        },
+        "relative": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false,
+      "examples": [
+        {
+          "absolute": "1.2.3"
+        },
+        {
+          "relative": "~1.2.0"
+        },
+        {
+          "pattern": "2.*"
+        }
+      ]
+    },
+    "Ref": {
+      "description": "A reference to another CML:AUS definition or an external resource.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "A simple, internal reference. Example: 'MyType:1.*'",
+          "examples": [
+            "NewUserInput:1.0.0",
+            "UserDatabase:2.1.*"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name of an internal definition within this set."
+            },
+            "urn": {
+              "type": "string",
+              "format": "uri",
+              "description": "The URN of an internal or external definition."
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "The URL where an external resource can be found."
+            },
+            "version": {
+              "$ref": "#/$defs/Version"
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "required": [
+                "urn"
+              ]
+            },
+            {
+              "required": [
+                "url"
+              ]
+            }
+          ],
+          "additionalProperties": false,
+          "examples": [
+            {
+              "name": "LegacyUserType",
+              "version": {
+                "absolute": "1.0.0"
+              }
+            },
+            {
+              "urn": "urn:common:types:Address",
+              "version": {
+                "pattern": "2.*"
+              }
+            },
+            {
+              "url": "https://example.com/schemas/openapi.json"
+            }
+          ]
+        }
+      ]
+    },
+    "Import": {
+      "description": "An instruction to import definitions from another CML:AUS document.",
+      "type": "object",
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/Ref"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "An alias to prepend to all imported definitions."
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "additionalProperties": false,
+      "examples": [
+        {
+          "ref": "urn:my-org:common-types:1.2",
+          "namespace": "common"
+        }
+      ]
+    },
+    "BaseComponent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/Version"
+        },
+        "docs": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "version"
+      ]
+    },
+    "ImplementationObject": {
+      "description": "An inline implementation of a transformation.",
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "sourceCode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "language",
+        "sourceCode"
+      ],
+      "examples": [
+        {
+          "language": "python",
+          "runtime": "3.9",
+          "sourceCode": "def hash_password(pwd, salt):\\n  # ... hashing logic ...\\n  return hashed"
+        }
+      ]
+    },
+    "TypeComponent": {
+      "description": "Defines a data schema or model, specifying the structure of data.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Type"
+        },
+        "spec": {
+          "description": "The schema definition (e.g., an inline JSON Schema).",
+          "type": "object"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "examples": [
+        {
+          "type": "Type",
+          "version": {
+            "absolute": "1.0.0"
+          },
+          "docs": "Schema for user registration data.",
+          "spec": {
+            "schemaType": "json-schema",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StorageComponent": {
+      "description": "Defines a system where data is stored, such as a database or file system.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Storage"
+        },
+        "medium": {
+          "description": "The kind of storage technology (e.g., 'PostgreSQL', 'S3').",
+          "type": "string"
+        },
+        "config": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "medium"
+      ],
+      "examples": [
+        {
+          "type": "Storage",
+          "version": {
+            "absolute": "2.1.0",
+            "group": "2"
+          },
+          "medium": "PostgreSQL",
+          "config": {
+            "host": "db.e-corp.local",
+            "port": 5432
+          }
+        }
+      ]
+    },
+    "InterfaceComponent": {
+      "description": "Defines a boundary through which systems interact, such as an API or a UI.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Interface"
+        },
+        "protocol": {
+          "description": "The communication protocol used (e.g., 'REST', 'GraphQL').",
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/Ref"
+        }
+      },
+      "required": [
+        "protocol"
+      ],
+      "examples": [
+        {
+          "type": "Interface",
+          "version": {
+            "absolute": "v2.0.1"
+          },
+          "protocol": "REST",
+          "spec": {
+            "url": "https://api.e-corp.com/openapi.json"
+          }
+        }
+      ]
+    },
+    "TransformationComponent": {
+      "description": "Describes an algorithm or process that modifies data from a set of inputs to a set of outputs.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Transformation"
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Ref"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Ref"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ImplementationObject"
+            },
+            {
+              "$ref": "#/$defs/Ref"
+            }
+          ]
+        }
+      },
+      "required": [
+        "inputs",
+        "outputs"
+      ],
+      "examples": [
+        {
+          "type": "Transformation",
+          "version": {
+            "absolute": "1.1.0"
+          },
+          "inputs": {
+            "unprocessedUser": "NewUserInput:1.0"
+          },
+          "outputs": {
+            "processedUser": "StoredUser:1.0"
+          },
+          "steps": [
+            "Hash the password with Argon2"
+          ],
+          "implementation": {
+            "ref": {
+              "urn": "urn:e-corp:utils:hash-password:1.1.0"
+            }
+          }
+        }
+      ]
+    },
+    "SourceComponent": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Source"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "protocol": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "protocol"
+          ]
+        },
+        {
+          "properties": {
+            "medium": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "medium"
+          ]
+        }
+      ],
+      "description": "A Source represents a start-point, specifying either an Interface (via protocol) or Storage (via medium).",
+      "examples": [
+        {
+          "type": "Source",
+          "version": {
+            "absolute": "3.4.1"
+          },
+          "protocol": "UI",
+          "docs": "The main web application interface where users sign up."
+        }
+      ]
+    },
+    "TargetComponent": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "Target"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "protocol": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "protocol"
+          ]
+        },
+        {
+          "properties": {
+            "medium": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "medium"
+          ]
+        }
+      ],
+      "description": "A Target represents an end-point, specifying either an Interface (via protocol) or Storage (via medium).",
+      "examples": [
+        {
+          "type": "Target",
+          "version": {
+            "absolute": "1.0.0"
+          },
+          "medium": "S3",
+          "docs": "Data lake for raw event logs from the web application."
+        }
+      ]
+    },
+    "EnvironmentStageComponent": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/BaseComponent"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "EnvironmentStage"
+        },
+        "name": {
+          "type": "string",
+          "description": "The common name for the environment stage (e.g., 'production', 'staging')."
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "description": "An EnvironmentStage defines a deployment environment (e.g., 'production', 'dev').",
+      "examples": [
+        {
+          "type": "EnvironmentStage",
+          "version": {
+            "absolute": "1.0.0"
+          },
+          "name": "production",
+          "docs": "The live, customer-facing production environment."
+        }
+      ]
+    }
+  }
+}
